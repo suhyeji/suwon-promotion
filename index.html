@@ -1,0 +1,980 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>수원삼성 승격 확률</title>
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="수원삼성 승격확률">
+<meta name="theme-color" content="#0b2d6b">
+<style>
+  :root {
+    --bg: #eef1f7;
+    --surface: #ffffff;
+    --surface-2: #f4f6fb;
+    --ink: #101a33;
+    --ink-2: #48526c;
+    --ink-3: #8891a6;
+    --line: #e1e6f0;
+    --navy: #0b2d6b;
+    --navy-ink: #ffffff;
+    --good: #1a9463;
+    --good-bg: #e6f5ee;
+    --warn: #b9791a;
+    --warn-bg: #faf0dd;
+    --ring-track: #e3e8f2;
+    --shadow: 0 1px 2px rgba(16, 26, 51, 0.04), 0 8px 24px rgba(16, 26, 51, 0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0a0f1c;
+      --surface: #121a2c;
+      --surface-2: #17203570;
+      --ink: #eaf0ff;
+      --ink-2: #aab4cc;
+      --ink-3: #6c7793;
+      --line: #223055;
+      --navy: #6fa0f2;
+      --navy-ink: #081227;
+      --good: #35c98a;
+      --good-bg: #123626;
+      --warn: #e3a83b;
+      --warn-bg: #3a2c11;
+      --ring-track: #22304f;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html {
+    /* iOS 사파리가 레이아웃 변경(reflow) 후 일부 텍스트 font-size를 임의로
+       키우는 "font boosting"을 끈다 — 순위표 행을 펼칠 때 팀 이름 글자가
+       커져 보이던 원인이 이것이었다. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    touch-action: manipulation;
+  }
+  .page {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 0 max(28px, env(safe-area-inset-bottom)) 0;
+  }
+
+  header.top {
+    position: relative;
+    background: linear-gradient(160deg, var(--navy), #071d46 120%);
+    color: var(--navy-ink);
+    padding: max(20px, env(safe-area-inset-top)) 20px 22px;
+    border-radius: 0 0 20px 20px;
+  }
+  .refresh-btn {
+    position: absolute;
+    top: max(20px, env(safe-area-inset-top));
+    right: 20px;
+    width: 34px; height: 34px;
+    border: none; border-radius: 50%;
+    background: rgba(255,255,255,0.14);
+    color: var(--navy-ink);
+    font-size: 17px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: background 0.2s;
+  }
+  .refresh-btn:active { background: rgba(255,255,255,0.28); }
+  .refresh-btn:disabled { opacity: 0.6; cursor: default; }
+  .refresh-btn .icon { display: inline-block; transition: transform 0.2s; }
+  .refresh-btn.spinning .icon { animation: refresh-spin 0.8s linear infinite; }
+  @keyframes refresh-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .refresh-btn.spinning .icon { animation: none; }
+  }
+  header.top .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.68;
+    margin: 0 0 4px;
+  }
+  header.top h1 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0 0 12px;
+    text-wrap: balance;
+  }
+  .top-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pill {
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 100px;
+    background: rgba(255,255,255,0.14);
+  }
+
+  .live-banner { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+  .live-banner:empty { display: none; }
+  .live-row {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12.5px; font-weight: 600;
+    background: rgba(255,255,255,0.14); border-radius: 100px;
+    padding: 5px 12px 5px 10px;
+  }
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #ff5b5b; flex: none;
+    animation: live-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  @media (prefers-reduced-motion: reduce) {
+    .live-dot { animation: none; }
+  }
+
+  .league-progress { margin-top: 14px; }
+  .progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 11.5px; font-weight: 600; opacity: 0.8;
+    margin-bottom: 6px; font-variant-numeric: tabular-nums;
+  }
+  .progress-track {
+    height: 6px; border-radius: 4px;
+    background: rgba(255,255,255,0.16); overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 4px;
+    background: #ffffff; opacity: 0.85;
+    width: 0%; transition: width 0.8s cubic-bezier(.2,.8,.2,1);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .progress-fill { transition: none; }
+  }
+
+  main { padding: 18px 16px 0; display: flex; flex-direction: column; gap: 14px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  /* mode toggle */
+  .mode-toggle {
+    display: flex; gap: 3px; padding: 3px;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px;
+  }
+  .mode-btn {
+    flex: 1; border: none; background: transparent; color: var(--ink-2);
+    font-family: inherit; font-size: 12.5px; font-weight: 700;
+    padding: 9px 6px; border-radius: 9px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mode-btn.active { background: var(--surface); color: var(--navy); box-shadow: var(--shadow); }
+  .mode-btn:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+
+  /* hero */
+  .hero { padding: 22px 18px; text-align: center; }
+  .hero .ring-wrap { position: relative; width: 176px; height: 176px; margin: 4px auto 10px; }
+  .hero svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .hero .ring-track { fill: none; stroke: var(--ring-track); stroke-width: 12; }
+  .hero .ring-value { fill: none; stroke: var(--good); stroke-width: 12; stroke-linecap: round; transition: stroke-dashoffset 1.1s cubic-bezier(.2,.8,.2,1); }
+  .hero .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .hero .ring-pct { font-size: 40px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .hero .ring-pct sup { font-size: 18px; font-weight: 700; margin-left: 1px; }
+  .hero .ring-label { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+  .hero .title { font-size: 15px; font-weight: 700; color: var(--ink-2); margin: 2px 0 0; }
+  .hero .sub { font-size: 12px; color: var(--ink-3); margin: 4px 0 0; }
+
+  /* stat row */
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .stat-tile { padding: 14px 8px; text-align: center; }
+  .stat-tile .v { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .stat-tile .l { font-size: 11.5px; color: var(--ink-3); margin-top: 3px; font-weight: 600; }
+
+  /* rank distribution bar */
+  .dist { padding: 16px 16px 14px; }
+  .dist h2 { font-size: 13px; font-weight: 700; margin: 0 0 10px; color: var(--ink-2); }
+  .dist-bar { display: flex; height: 14px; border-radius: 8px; overflow: hidden; background: var(--ring-track); }
+  .dist-bar span { height: 100%; }
+  .dist-legend { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 10px; }
+  .dist-legend .item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); }
+  .dist-legend .dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+
+  /* fixtures */
+  .fixtures { padding: 4px 0 14px; }
+  .fixture-scroll {
+    display: flex; gap: 8px; overflow-x: auto; padding: 2px 16px 4px;
+    scroll-snap-type: x proximity;
+    scroll-padding-left: 16px;
+  }
+  .fixture-card {
+    flex: none; scroll-snap-align: start;
+    width: 104px; padding: 10px 8px; border-radius: 12px;
+    background: var(--surface-2); border: 1px solid var(--line);
+    text-align: center;
+  }
+  .fixture-card .no { font-size: 10px; color: var(--ink-3); font-weight: 700; white-space: nowrap; }
+  .fixture-card .time { font-size: 10px; color: var(--ink-3); margin-top: 1px; font-variant-numeric: tabular-nums; }
+  .fixture-card .opp { font-size: 12.5px; font-weight: 700; margin: 5px 0 6px; line-height: 1.25; min-height: 32px; display: flex; align-items: center; justify-content: center; }
+  .fixture-card .ha {
+    display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 100px;
+  }
+  .fixture-card .ha.home { background: var(--good-bg); color: var(--good); }
+  .fixture-card .ha.away { background: var(--warn-bg); color: var(--warn); }
+
+  /* table */
+  .table-card { padding: 4px 0 6px; }
+  .table-head-row { display: flex; align-items: baseline; justify-content: space-between; padding: 12px 16px 8px; }
+  .table-head-row h2 { font-size: 13px; font-weight: 700; margin: 0; color: var(--ink-2); }
+  .table-head-row span { font-size: 11px; color: var(--ink-3); }
+  .table-scroll { overflow-x: auto; overflow-y: visible; }
+  table { border-collapse: collapse; width: 100%; min-width: 540px; font-size: 12.5px; }
+  thead th {
+    position: sticky; top: 0;
+    text-align: right; font-weight: 600; color: var(--ink-3); font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 6px 10px; border-bottom: 1px solid var(--line);
+    background: var(--surface);
+  }
+  thead th:first-child, thead th:nth-child(2) { text-align: left; }
+  tbody td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  tbody td:first-child { text-align: center; width: 28px; color: var(--ink-3); font-weight: 700; }
+  tbody td:nth-child(2) { text-align: left; font-weight: 600; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.zone-direct td:first-child { box-shadow: inset 3px 0 0 var(--good); }
+  tbody tr.zone-po td:first-child { box-shadow: inset 3px 0 0 var(--warn); }
+  tbody tr.me { background: var(--surface-2); }
+  tbody tr.me td:nth-child(2) { color: var(--navy); }
+  .chip { display: inline-block; font-size: 9.5px; font-weight: 700; padding: 1px 5px; border-radius: 5px; margin-left: 5px; vertical-align: 1px; }
+  .chip.direct { background: var(--good-bg); color: var(--good); }
+  .chip.po { background: var(--warn-bg); color: var(--warn); }
+  .prob-cell { font-weight: 700; }
+
+  tbody tr.team-row { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  tbody tr.team-row:active { background: var(--surface-2); }
+  .row-caret { display: inline-block; margin-left: 4px; color: var(--ink-3); font-weight: 400; transition: transform 0.2s; }
+  tbody tr.team-row.expanded .row-caret { transform: rotate(90deg); color: var(--navy); }
+  tbody tr.fixture-expand-row td { padding: 10px 4px 12px; background: var(--surface-2); max-width: 0; }
+  tbody tr.fixture-expand-row .fixture-scroll { padding: 0 4px 2px; scroll-padding-left: 4px; }
+  .no-fixtures { font-size: 12.5px; color: var(--ink-3); padding: 4px 12px; margin: 0; }
+
+  details.method { padding: 14px 16px; }
+  details.method summary {
+    font-size: 13px; font-weight: 700; color: var(--ink-2);
+    cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center;
+  }
+  details.method summary::-webkit-details-marker { display: none; }
+  details.method summary::after { content: "＋"; color: var(--ink-3); font-weight: 400; }
+  details.method[open] summary::after { content: "－"; }
+  details.method p { font-size: 12.5px; line-height: 1.6; color: var(--ink-2); margin: 10px 0 0; }
+  details.method p + p { margin-top: 8px; }
+
+  footer { padding: 6px 16px 4px; text-align: center; }
+  footer p { font-size: 11.5px; color: var(--ink-3); line-height: 1.6; margin: 0; }
+
+  .error-card { padding: 24px; text-align: center; }
+  .error-card p.title { font-weight: 700; margin: 0 0 8px; }
+  .error-card p.detail { font-size: 13px; color: var(--ink-3); margin: 0; }
+  .error-card button {
+    margin-top: 14px; padding: 10px 18px; border: none; border-radius: 10px;
+    background: var(--navy); color: #fff; font-weight: 700; font-family: inherit; cursor: pointer;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero .ring-value { transition: none; }
+  }
+
+  #ptrIndicator {
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top));
+    left: 50%;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-3);
+    font-size: 16px;
+    z-index: 60;
+    opacity: 0;
+    transform: translate(-50%, -60px);
+    pointer-events: none;
+  }
+  #ptrIndicator.ready { color: var(--good); }
+  #ptrIndicator .icon { display: inline-block; }
+  #ptrIndicator.spinning .icon { animation: refresh-spin 0.8s linear infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    #ptrIndicator.spinning .icon { animation: none; }
+  }
+  .page.ptr-live { transition: none; }
+  .page.ptr-settling { transition: transform 0.25s cubic-bezier(.2,.8,.2,1); }
+</style>
+</head>
+<body>
+<div id="ptrIndicator"><span class="icon">⟳</span></div>
+<div class="page">
+  <header class="top">
+    <button type="button" class="refresh-btn" id="refreshBtn" aria-label="새로고침" title="최신 데이터로 새로고침"><span class="icon">⟳</span></button>
+    <p class="eyebrow">2026 K리그2 · 하나은행 K리그2</p>
+    <h1>수원삼성 블루윙즈<br>다이렉트 승격 확률</h1>
+    <div class="top-meta">
+      <span class="pill" id="rankPill">불러오는 중…</span>
+      <span class="pill" id="ptsPill">승점 -</span>
+      <span class="pill" id="asOfPill">기준일 -</span>
+    </div>
+    <div id="liveBanner" class="live-banner"></div>
+    <div class="league-progress">
+      <div class="progress-label">
+        <span>시즌 진행률</span>
+        <span id="progressText">-</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="mode-toggle" role="tablist" aria-label="계산 방식 선택">
+      <button type="button" class="mode-btn active" id="modeSimBtn" data-mode="sim" role="tab" aria-selected="true">시뮬레이션</button>
+      <button type="button" class="mode-btn" id="modeSimpleBtn" data-mode="simple" role="tab" aria-selected="false">매직넘버</button>
+    </div>
+
+    <section class="card hero">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 176 176">
+          <circle class="ring-track" cx="88" cy="88" r="74"></circle>
+          <circle class="ring-value" id="ringValue" cx="88" cy="88" r="74" stroke-dasharray="465" stroke-dashoffset="465"></circle>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-pct" id="ringPct">-<sup>%</sup></div>
+          <div class="ring-label" id="ringLabel">직행 승격</div>
+        </div>
+      </div>
+      <p class="title" id="heroTitle">시즌 종료 시 1~2위(다이렉트 승격) 확률</p>
+      <p class="sub" id="simNote">최신 데이터를 불러오는 중…</p>
+    </section>
+
+    <section class="stat-row">
+      <div class="card stat-tile"><div class="v" id="p1">-%</div><div class="l" id="p1Label">1위 확률</div></div>
+      <div class="card stat-tile"><div class="v" id="p2">-%</div><div class="l" id="p2Label">2위 확률</div></div>
+      <div class="card stat-tile"><div class="v" id="pPo">-%</div><div class="l" id="pPoLabel">승격PO행 (3~6위)</div></div>
+    </section>
+
+    <section class="card dist" id="distSection">
+      <h2 id="distTitle">최종 순위 확률 분포</h2>
+      <div class="dist-bar" id="distBar"></div>
+      <div class="dist-legend" id="distLegend"></div>
+    </section>
+
+    <section class="card fixtures">
+      <div class="table-head-row">
+        <h2>수원삼성 잔여 대진표</h2>
+        <span id="remainNote">잔여 -경기</span>
+      </div>
+      <div class="fixture-scroll" id="fixtureList"></div>
+    </section>
+
+    <section class="card table-card">
+      <div class="table-head-row">
+        <h2>K리그2 전체 순위</h2>
+        <span id="tableSubNote">현재 순위 · 직행 확률</span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>팀</th><th>경기</th><th>승점</th><th>승무패</th><th>득점</th><th>실점</th><th>득실</th><th id="colProb">직행%</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <details class="method card">
+      <summary>확률은 어떻게 계산하나요?</summary>
+      <p><strong>① 시뮬레이션</strong> — K리그 공식 홈페이지(kleague.com)의 경기 일정 데이터로 17개 팀 전체의 잔여 경기 대진(상대·홈/원정·날짜)을 실제 그대로 가져와, 각 팀의 득점·실점 기반 공격력·수비력으로 개별 경기 스코어를 포아송 분포로 12,000회 시뮬레이션합니다. 대진표는 확정이고 경기 결과만 확률적으로 반복 계산하는 방식이라 가장 정교합니다.</p>
+      <p><strong>② 매직넘버</strong> — 확률이 아니라 <strong>수학적으로 확정되는 지점</strong>을 계산합니다. "다른 모든 팀이 잔여 경기를 전부 이긴다"는 최악의 가정을 깔아도, 그 상황에서 직행권(2위 이내)을 지키려면 지금부터 몇 승점이 더 필요한지를 구합니다. 이때 <strong>자신과의 남은 맞대결은 정확히 반영</strong>합니다 — 예를 들어 수원삼성과 수원FC가 남은 경기에서 서로 맞붙는다면 "둘 다 그 경기를 이긴다"고 가정하는 자기모순 없이, 수원삼성이 이긴다고 보고 그만큼 상대의 최대치를 정확히 깎습니다.</p>
+      <p>다만 <strong>라이벌팀들끼리의 맞대결</strong>(예: 수원FC와 서울이랜드의 남은 경기)까지 전부 정확히 반영하는 건 계산 복잡도가 기하급수로 커지는 문제라(3점 승점제에서는 이 문제 자체가 NP-hard로 알려져 있어요) 여전히 각자 독립적으로 전승한다고 가정합니다. 그래서 이 숫자는 <strong>"이보다 적은 승점으로도 안전할 수 있는" 안전한 상한선</strong>이에요 — 실전 감각에 가까운 확률이 궁금하면 시뮬레이션 탭을 보세요.</p>
+      <p>두 방식 모두 실제 경기력·부상·감독 교체 등은 반영하지 못하므로 <strong>추세를 보여주는 추정치</strong>이며 K리그 공식 수치가 아닙니다. 2026시즌은 K리그1 확대에 따른 한시적 규정으로 <strong>1·2위가 다이렉트 승격</strong>, 3~6위가 승격 플레이오프를 치릅니다.</p>
+      <p>경기가 진행 중일 때는 K리그 공식 홈페이지처럼 <strong>현재(잠정) 스코어를 순위표에 바로 반영</strong>합니다(상단에 "진행중" 표시). 다만 이 페이지는 30분 단위로 캐시되므로, 문자중계처럼 실시간은 아니고 새로고침 시점 기준 최신 스코어예요.</p>
+    </details>
+
+    <footer>
+      <p id="footerNote">데이터 불러오는 중…</p>
+      <p>새로고침하면 K리그 공식 데이터를 다시 불러와 자동으로 갱신됩니다.</p>
+    </footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  var TARGET = "수원삼성";
+  var currentMode = "sim";
+  var refreshBtn = document.getElementById("refreshBtn");
+  var modeSimBtn = document.getElementById("modeSimBtn");
+  var modeSimpleBtn = document.getElementById("modeSimpleBtn");
+
+  function setMode(mode) {
+    currentMode = mode;
+    modeSimBtn.classList.toggle("active", mode === "sim");
+    modeSimpleBtn.classList.toggle("active", mode === "simple");
+    modeSimBtn.setAttribute("aria-selected", mode === "sim" ? "true" : "false");
+    modeSimpleBtn.setAttribute("aria-selected", mode === "simple" ? "true" : "false");
+  }
+
+  async function loadAndRender(isRefresh) {
+    if (isRefresh) {
+      refreshBtn.disabled = true;
+      refreshBtn.classList.add("spinning");
+    }
+
+    var teams, ALL_FIXTURES, asOfRound, fetchedAt, live;
+    try {
+      var res = await fetch("/api/data");
+      if (!res.ok) throw new Error("서버 응답 오류 (HTTP " + res.status + ")");
+      var data = await res.json();
+      if (data.error) throw new Error(data.error);
+      teams = data.teams;
+      ALL_FIXTURES = data.fixtures;
+      asOfRound = data.asOfRound;
+      fetchedAt = data.fetchedAt;
+      live = data.live || [];
+    } catch (err) {
+      if (isRefresh) {
+        document.getElementById("simNote").textContent =
+          "새로고침 실패: " + ((err && err.message) || "네트워크 오류") + " · 이전 데이터를 계속 표시합니다";
+        refreshBtn.disabled = false;
+        refreshBtn.classList.remove("spinning");
+        return;
+      }
+      document.getElementById("main").innerHTML =
+        '<div class="card error-card">' +
+        '<p class="title">데이터를 불러오지 못했어요</p>' +
+        '<p class="detail">' + ((err && err.message) || "네트워크 오류") + '</p>' +
+        '<button onclick="location.reload()">다시 시도</button>' +
+        '</div>';
+      return;
+    }
+
+  var HOME_BOOST = 1.12, AWAY_PENALTY = 0.90;
+
+  var N = teams.length;
+  var totalGF = 0, totalGP = 0;
+  teams.forEach(function (t) { totalGF += t.gf; totalGP += t.gp; });
+  var leagueAvg = totalGF / totalGP;
+  var K = 8;
+
+  teams.forEach(function (t) {
+    var w = t.gp / (t.gp + K);
+    var rawAtk = (t.gf / t.gp) / leagueAvg;
+    var rawDef = (t.ga / t.gp) / leagueAvg;
+    t.atk = 1 + w * (rawAtk - 1);
+    t.def = 1 + w * (rawDef - 1);
+    t.gd = t.gf - t.ga;
+  });
+
+  function poisson(lambda) {
+    if (lambda <= 0.02) return 0;
+    var L = Math.exp(-lambda), k = 0, p = 1;
+    do { k++; p *= Math.random(); } while (p > L);
+    return k - 1;
+  }
+
+  var nameIdx = {};
+  teams.forEach(function (t, i) { nameIdx[t.name] = i; });
+  var suwonIdx = nameIdx[TARGET];
+
+  // [round, date, homeIdx, awayIdx, time]
+  var fixtures = ALL_FIXTURES.map(function (f) {
+    return [f[0], f[1], nameIdx[f[2]], nameIdx[f[3]], f[4] || ""];
+  });
+
+  var TRIALS = 12000;
+  var basePts = teams.map(function (t) { return t.pts; });
+  var baseGd = teams.map(function (t) { return t.gd; });
+  var baseGf = teams.map(function (t) { return t.gf; });
+
+  var rank1 = new Array(N).fill(0);
+  var rank2 = new Array(N).fill(0);
+  var rankTop2 = new Array(N).fill(0);
+  var rankPo = new Array(N).fill(0); // 3~6
+  var rankRest = new Array(N).fill(0); // 7+
+
+  var order = teams.map(function (_, i) { return i; });
+
+  for (var trial = 0; trial < TRIALS; trial++) {
+    var ptsAdd = new Array(N).fill(0);
+    var gdAdd = new Array(N).fill(0);
+    var gfAdd = new Array(N).fill(0);
+
+    // K리그2 전체 잔여 경기를 실제 확정 대진표(홈/원정 포함) 그대로 시뮬레이션
+    for (var fi = 0; fi < fixtures.length; fi++) {
+      var homeIdx = fixtures[fi][2], awayIdx = fixtures[fi][3];
+      var lamH = teams[homeIdx].atk * teams[awayIdx].def * leagueAvg * HOME_BOOST;
+      var lamA = teams[awayIdx].atk * teams[homeIdx].def * leagueAvg * AWAY_PENALTY;
+      var gh = poisson(lamH), ga = poisson(lamA);
+      gdAdd[homeIdx] += (gh - ga);
+      gdAdd[awayIdx] += (ga - gh);
+      gfAdd[homeIdx] += gh;
+      gfAdd[awayIdx] += ga;
+      if (gh > ga) ptsAdd[homeIdx] += 3;
+      else if (gh < ga) ptsAdd[awayIdx] += 3;
+      else { ptsAdd[homeIdx] += 1; ptsAdd[awayIdx] += 1; }
+    }
+
+    var finalPts = new Array(N), finalGd = new Array(N), finalGf = new Array(N);
+    for (var i4 = 0; i4 < N; i4++) {
+      finalPts[i4] = basePts[i4] + ptsAdd[i4];
+      finalGd[i4] = baseGd[i4] + gdAdd[i4];
+      finalGf[i4] = baseGf[i4] + gfAdd[i4];
+    }
+
+    // K리그는 승점 동률 시 골득실보다 다득점을 먼저 본다 (승점 → 다득점 → 골득실 순).
+    order.sort(function (x, y) {
+      if (finalPts[y] !== finalPts[x]) return finalPts[y] - finalPts[x];
+      if (finalGf[y] !== finalGf[x]) return finalGf[y] - finalGf[x];
+      return finalGd[y] - finalGd[x];
+    });
+
+    for (var r = 0; r < N; r++) {
+      var teamIdx = order[r];
+      var place = r + 1;
+      if (place === 1) rank1[teamIdx]++;
+      else if (place === 2) rank2[teamIdx]++;
+      if (place <= 2) rankTop2[teamIdx]++;
+      else if (place <= 6) rankPo[teamIdx]++;
+      else rankRest[teamIdx]++;
+    }
+  }
+
+  teams.forEach(function (t, i) {
+    t.p1 = rank1[i] / TRIALS;
+    t.p2 = rank2[i] / TRIALS;
+    t.pTop2 = rankTop2[i] / TRIALS;
+    t.pPo = rankPo[i] / TRIALS;
+    t.pRest = rankRest[i] / TRIALS;
+  });
+
+  var me = teams.filter(function (t) { return t.name === TARGET; })[0];
+  // K리그는 승점 동률 시 골득실보다 다득점을 먼저 본다 (승점 → 다득점 → 골득실 순).
+  var currentOrder = teams.slice().sort(function (a, b) {
+    if (b.pts !== a.pts) return b.pts - a.pts;
+    if (b.gf !== a.gf) return b.gf - a.gf;
+    return (b.gf - b.ga) - (a.gf - a.ga);
+  });
+  var meCurrentRank = currentOrder.indexOf(me) + 1;
+
+  // 단순 방식: 매직넘버. "다른 모든 팀이 잔여 경기를 전부 이긴다"는 최악의 가정을 깔고도,
+  // 그 경계선을 넘어서기 위해 지금부터 추가로 필요한 최소 승점을 계산한다 (확률이 아니라
+  // 수학적으로 확정되는 지점을 구하는 결정론적 계산).
+  var remainCount = new Array(N).fill(0);
+  fixtures.forEach(function (f) { remainCount[f[2]]++; remainCount[f[3]]++; });
+  teams.forEach(function (t, i) {
+    t.remainCount = remainCount[i];
+    t.maxAdd = 3 * t.remainCount; // 잔여 경기 전승 시 추가로 딸 수 있는 최대 승점
+    t.maxFinal = t.pts + t.maxAdd;
+  });
+
+  // t와 상대(o) 사이에 남은 맞대결 경기 수 (보통 0 또는 1, 시즌 초반이면 2도 가능)
+  function meetingsRemaining(tIdx, oIdx) {
+    var count = 0;
+    for (var i = 0; i < fixtures.length; i++) {
+      var f = fixtures[i];
+      if ((f[2] === tIdx && f[3] === oIdx) || (f[2] === oIdx && f[3] === tIdx)) count++;
+    }
+    return count;
+  }
+
+  function magicNumber(t, boundaryRank) {
+    var tIdx = nameIdx[t.name];
+    var rivalMax = teams
+      .filter(function (o) { return o !== t; })
+      .map(function (o) {
+        var h2h = meetingsRemaining(tIdx, nameIdx[o.name]);
+        // t가 자신과 o의 남은 맞대결을 전부 이긴다고 가정한다 — t 입장에서 손해가 전혀
+        // 없는 선택(자기 승점에도 보태고 o도 억제)이라, "같은 경기를 서로 다 이긴다"는
+        // 자기모순 없이 o의 최대치에서 그만큼을 정확히 뺄 수 있다.
+        return o.maxFinal - 3 * h2h;
+      })
+      .sort(function (a, b) { return b - a; });
+    var floor = rivalMax[boundaryRank - 1];
+    var need = Math.max(0, floor - t.pts);
+    return { need: need, achievable: need <= t.maxAdd, minWins: Math.ceil(need / 3) };
+  }
+
+  teams.forEach(function (t) {
+    var top2 = magicNumber(t, 2);
+    var top6 = magicNumber(t, 6);
+    t.magicTop2 = top2.need;
+    t.top2Achievable = top2.achievable;
+    t.minWinsTop2 = top2.minWins;
+    t.magicTop6 = top6.need;
+    t.top6Achievable = top6.achievable;
+  });
+
+  function pct(x) { return Math.round(x * 1000) / 10; }
+  function fmtPct(x) {
+    var v = pct(x);
+    return (v % 1 === 0 ? v.toFixed(0) : v.toFixed(1));
+  }
+
+  var asOfLabel = asOfRound + "라운드까지 반영";
+  var fetchedLabel = new Date(fetchedAt).toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit"
+  });
+
+  document.getElementById("rankPill").textContent = "현재 " + meCurrentRank + "위";
+  document.getElementById("ptsPill").textContent = "승점 " + me.pts + "점";
+  document.getElementById("asOfPill").textContent = asOfLabel;
+  document.getElementById("footerNote").textContent = "데이터 기준: " + asOfLabel + " · 확인 " + fetchedLabel + " (KST)";
+
+  var TOTAL_ROUNDS = 34; // 2026시즌 K리그2 정규 라운드 수
+  var progressPct = Math.round((asOfRound / TOTAL_ROUNDS) * 100);
+  document.getElementById("progressText").textContent = asOfRound + "/" + TOTAL_ROUNDS + "라운드 · " + progressPct + "%";
+  requestAnimationFrame(function () {
+    document.getElementById("progressFill").style.width = progressPct + "%";
+  });
+
+  // 킥오프가 지났지만 아직 공식 종료(Y)로 표시되지 않은 경기 — 현재(잠정) 스코어를
+  // K리그 공식 홈페이지처럼 순위표에 이미 반영했다는 걸 알려준다.
+  var liveBanner = document.getElementById("liveBanner");
+  liveBanner.innerHTML = "";
+  live.forEach(function (g) {
+    var row = document.createElement("div");
+    row.className = "live-row";
+    row.innerHTML =
+      '<span class="live-dot"></span>' +
+      "<span>" + g.round + "R " + g.home + " " + g.homeGoal + "-" + g.awayGoal + " " + g.away + " (진행중 · 잠정 반영)</span>";
+    liveBanner.appendChild(row);
+  });
+  var suwonFixtures = fixtures.filter(function (f) { return f[2] === suwonIdx || f[3] === suwonIdx; });
+  document.getElementById("remainNote").textContent = "잔여 " + suwonFixtures.length + "경기 · 공식 확정 대진";
+
+  var WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"];
+  function teamFixtures(teamIdx) {
+    return fixtures.filter(function (f) { return f[2] === teamIdx || f[3] === teamIdx; });
+  }
+  function makeFixtureCard(f, teamIdx) {
+    var round = f[0], mmdd = f[1], home = f[2] === teamIdx, time = f[4];
+    var oppName = teams[home ? f[3] : f[2]].short;
+    var dt = new Date("2026-" + mmdd);
+    var dateLabel = mmdd.replace("-", "/").replace(/^0/, "") + "(" + WEEKDAY[dt.getDay()] + ")";
+    var card = document.createElement("div");
+    card.className = "fixture-card";
+    card.innerHTML =
+      '<div class="no">' + round + "R · " + dateLabel + "</div>" +
+      (time ? '<div class="time">' + time + "</div>" : "") +
+      '<div class="opp">' + oppName + "</div>" +
+      '<span class="ha ' + (home ? "home" : "away") + '">' + (home ? "홈" : "원정") + "</span>";
+    return card;
+  }
+
+  var fixtureList = document.getElementById("fixtureList");
+  fixtureList.innerHTML = "";
+  suwonFixtures.forEach(function (f) {
+    fixtureList.appendChild(makeFixtureCard(f, suwonIdx));
+  });
+
+  var circumference = 2 * Math.PI * 74;
+  var ring = document.getElementById("ringValue");
+  ring.setAttribute("stroke-dasharray", circumference.toFixed(1));
+
+  function renderHero(mode) {
+    if (mode === "sim") {
+      var offset = circumference * (1 - me.pTop2);
+      ring.style.stroke = "var(--good)";
+      requestAnimationFrame(function () {
+        setTimeout(function () { ring.style.strokeDashoffset = offset.toFixed(1); }, 60);
+      });
+      document.getElementById("ringPct").innerHTML = fmtPct(me.pTop2) + "<sup>%</sup>";
+      document.getElementById("ringLabel").textContent = "직행 승격 확률";
+      document.getElementById("heroTitle").textContent = "시즌 종료 시 1~2위(다이렉트 승격) 확률";
+      document.getElementById("simNote").textContent = "K리그 공식 잔여 대진 " + fixtures.length + "경기 전부 반영 · 시뮬레이션 " + TRIALS.toLocaleString("ko-KR") + "회";
+    } else {
+      var frac = me.maxAdd > 0 ? Math.max(0, Math.min(1, 1 - me.magicTop2 / me.maxAdd)) : 1;
+      var offset2 = circumference * (1 - frac);
+      var color = (me.magicTop2 <= 0 || me.top2Achievable) ? "var(--good)" : "var(--ink-3)";
+      ring.style.stroke = color;
+      requestAnimationFrame(function () {
+        setTimeout(function () { ring.style.strokeDashoffset = offset2.toFixed(1); }, 60);
+      });
+      document.getElementById("ringPct").innerHTML = (me.magicTop2 <= 0 ? "0" : me.magicTop2) + '<span style="font-size:16px;font-weight:700;margin-left:2px;">점</span>';
+      document.getElementById("ringLabel").textContent = me.magicTop2 <= 0 ? "직행 확정!" : "직행 확정까지 필요 승점";
+      document.getElementById("heroTitle").textContent = "다른 팀이 잔여 경기를 전부 이겨도 직행이 확정되는 매직넘버";
+      document.getElementById("simNote").textContent = me.top2Achievable
+        ? ("잔여 " + me.remainCount + "경기 중 최소 " + me.minWinsTop2 + "승 필요 (전승 시 최종 " + me.maxFinal + "점) · 실제 대진표는 반영하지 않은 단순 계산")
+        : ("잔여 " + me.remainCount + "경기를 전부 이겨도(최대 " + me.maxFinal + "점) 이 방식으로는 아직 수학적 확정 불가 · 현실적인 확률은 시뮬레이션 탭 참고");
+    }
+  }
+
+  function renderStats(mode) {
+    if (mode === "sim") {
+      document.getElementById("p1").textContent = fmtPct(me.p1) + "%";
+      document.getElementById("p1Label").textContent = "1위 확률";
+      document.getElementById("p2").textContent = fmtPct(me.p2) + "%";
+      document.getElementById("p2Label").textContent = "2위 확률";
+      document.getElementById("pPo").textContent = fmtPct(me.pPo) + "%";
+      document.getElementById("pPoLabel").textContent = "승격PO행 (3~6위)";
+    } else {
+      document.getElementById("p1").textContent = (me.magicTop2 <= 0 ? "0" : me.magicTop2) + "점";
+      document.getElementById("p1Label").textContent = "직행 확정까지 필요 승점";
+      document.getElementById("p2").textContent = me.minWinsTop2 + "승";
+      document.getElementById("p2Label").textContent = "필요 최소 승수";
+      document.getElementById("pPo").textContent = me.maxFinal + "점";
+      document.getElementById("pPoLabel").textContent = "잔여 전승 시 최종 승점";
+    }
+  }
+
+  var distBar = document.getElementById("distBar");
+  var distLegend = document.getElementById("distLegend");
+
+  function buildMagicRow(label, need, maxAdd, achievable) {
+    var wrap = document.createElement("div");
+    var labelRow = document.createElement("div");
+    labelRow.style.cssText = "display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2);margin-bottom:6px;";
+    var labelSpan = document.createElement("span");
+    labelSpan.textContent = label;
+    var valueSpan = document.createElement("span");
+    valueSpan.style.fontWeight = "700";
+    valueSpan.textContent = need <= 0 ? "확정!" : (achievable ? need + "점 필요" : "전승해도 확정 불가");
+    labelRow.appendChild(labelSpan);
+    labelRow.appendChild(valueSpan);
+    var track = document.createElement("div");
+    track.style.cssText = "height:10px;border-radius:6px;background:var(--ring-track);overflow:hidden;";
+    var fill = document.createElement("span");
+    var frac = maxAdd > 0 ? Math.max(0, Math.min(1, 1 - need / maxAdd)) : 1;
+    fill.style.cssText = "display:block;height:100%;border-radius:6px;width:" + (frac * 100) + "%;background:" + ((need <= 0 || achievable) ? "var(--good)" : "var(--ink-3)") + ";";
+    track.appendChild(fill);
+    wrap.appendChild(labelRow);
+    wrap.appendChild(track);
+    return wrap;
+  }
+
+  function renderDist(mode) {
+    distBar.innerHTML = "";
+    distLegend.innerHTML = "";
+    distBar.removeAttribute("style");
+    distLegend.style.display = "";
+
+    if (mode === "sim") {
+      document.getElementById("distTitle").textContent = "최종 순위 확률 분포";
+      var segs = [
+        { label: "1위", v: me.p1, color: "var(--good)" },
+        { label: "2위", v: me.p2, color: "var(--good)" },
+        { label: "3~6위 (PO)", v: me.pPo, color: "var(--warn)" },
+        { label: "7위 이하", v: me.pRest, color: "var(--ink-3)" }
+      ];
+      segs.forEach(function (seg, i) {
+        var span = document.createElement("span");
+        span.style.width = (seg.v * 100) + "%";
+        span.style.background = seg.color;
+        span.style.opacity = i === 1 ? "0.72" : "1";
+        distBar.appendChild(span);
+      });
+      segs.forEach(function (seg, i) {
+        var item = document.createElement("div");
+        item.className = "item";
+        var dot = document.createElement("span");
+        dot.className = "dot";
+        dot.style.background = seg.color;
+        dot.style.opacity = i === 1 ? "0.72" : "1";
+        var text = document.createElement("span");
+        text.textContent = seg.label + " " + fmtPct(seg.v) + "%";
+        item.appendChild(dot);
+        item.appendChild(text);
+        distLegend.appendChild(item);
+      });
+    } else {
+      document.getElementById("distTitle").textContent = "확정까지 남은 거리 (매직넘버)";
+      distBar.style.cssText = "display:flex;flex-direction:column;gap:16px;height:auto;background:transparent;";
+      distBar.appendChild(buildMagicRow("직행권(2위) 확정까지", me.magicTop2, me.maxAdd, me.top2Achievable));
+      distBar.appendChild(buildMagicRow("플레이오프권(6위) 확정까지", me.magicTop6, me.maxAdd, me.top6Achievable));
+      distLegend.style.display = "none";
+    }
+  }
+
+  var tbody = document.getElementById("tableBody");
+  function renderTable(mode) {
+    document.getElementById("colProb").textContent = mode === "sim" ? "직행%" : "매직넘버";
+    document.getElementById("tableSubNote").textContent = mode === "sim" ? "현재 순위 · 직행 확률" : "현재 순위 · 직행 확정까지 필요 승점";
+    tbody.innerHTML = "";
+    currentOrder.forEach(function (t, i) {
+      var rank = i + 1;
+      var tr = document.createElement("tr");
+      var zoneClass = rank <= 2 ? "zone-direct" : (rank <= 6 ? "zone-po" : "");
+      if (zoneClass) tr.className = zoneClass;
+      if (t.name === TARGET) tr.className = (tr.className + " me").trim();
+
+      var chip = "";
+      if (rank <= 2) chip = '<span class="chip direct">직행</span>';
+      else if (rank <= 6) chip = '<span class="chip po">PO권</span>';
+
+      var lastCell = mode === "sim"
+        ? fmtPct(t.pTop2) + "%"
+        : (t.magicTop2 <= 0 ? "확정!" : (t.top2Achievable ? t.magicTop2 + "점" : "—"));
+
+      tr.className = (tr.className + " team-row").trim();
+      tr.innerHTML =
+        "<td>" + rank + "</td>" +
+        "<td>" + t.short + chip + '<span class="row-caret">›</span></td>' +
+        "<td>" + t.gp + "</td>" +
+        "<td>" + t.pts + "</td>" +
+        "<td>" + t.w + "-" + t.d + "-" + t.l + "</td>" +
+        "<td>" + t.gf + "</td>" +
+        "<td>" + t.ga + "</td>" +
+        "<td>" + (t.gf - t.ga >= 0 ? "+" : "") + (t.gf - t.ga) + "</td>" +
+        '<td class="prob-cell">' + lastCell + "</td>";
+
+      tr.addEventListener("click", function () {
+        var existing = tbody.querySelector(".fixture-expand-row");
+        var wasOpenForThisRow = existing && existing.dataset.team === t.name;
+        if (existing) {
+          existing.previousElementSibling && existing.previousElementSibling.classList.remove("expanded");
+          existing.remove();
+        }
+        if (wasOpenForThisRow) return;
+
+        tr.classList.add("expanded");
+        var expandTr = document.createElement("tr");
+        expandTr.className = "fixture-expand-row";
+        expandTr.dataset.team = t.name;
+        var td = document.createElement("td");
+        td.colSpan = 9;
+        var scrollDiv = document.createElement("div");
+        scrollDiv.className = "fixture-scroll";
+        var idx = nameIdx[t.name];
+        var tf = teamFixtures(idx);
+        if (tf.length) {
+          tf.forEach(function (f) { scrollDiv.appendChild(makeFixtureCard(f, idx)); });
+        } else {
+          scrollDiv.innerHTML = '<p class="no-fixtures">잔여 경기가 없습니다.</p>';
+        }
+        td.appendChild(scrollDiv);
+        expandTr.appendChild(td);
+        tr.parentNode.insertBefore(expandTr, tr.nextSibling);
+      });
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderAll(mode) {
+    renderHero(mode);
+    renderStats(mode);
+    renderDist(mode);
+    renderTable(mode);
+  }
+
+  renderAll(currentMode);
+
+  modeSimBtn.onclick = function () { setMode("sim"); renderAll(currentMode); };
+  modeSimpleBtn.onclick = function () { setMode("simple"); renderAll(currentMode); };
+
+    if (isRefresh) {
+      refreshBtn.disabled = false;
+      refreshBtn.classList.remove("spinning");
+    }
+  }
+
+  refreshBtn.onclick = function () { loadAndRender(true); };
+
+  // 상단에서 아래로 끝까지 잡아당기면(pull-to-refresh) 새로고침
+  (function setupPullToRefresh() {
+    var page = document.querySelector(".page");
+    var indicator = document.getElementById("ptrIndicator");
+    var THRESHOLD = 70;
+    var MAX_PULL = 110;
+    var startY = 0, pulling = false, currentPull = 0, refreshing = false;
+
+    function scrollTop() {
+      return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    }
+
+    function applyPull(px) {
+      page.classList.add("ptr-live");
+      page.classList.remove("ptr-settling");
+      page.style.transform = px > 0 ? "translateY(" + px + "px)" : "";
+      indicator.style.opacity = Math.min(px / THRESHOLD, 1);
+      indicator.style.transform = "translate(-50%, " + (-60 + px) + "px) rotate(" + (px * 3) + "deg)";
+      indicator.classList.toggle("ready", px >= THRESHOLD);
+    }
+
+    function settle(px) {
+      page.classList.remove("ptr-live");
+      page.classList.add("ptr-settling");
+      page.style.transform = px > 0 ? "translateY(" + px + "px)" : "";
+    }
+
+    function reset() {
+      settle(0);
+      indicator.style.opacity = 0;
+      indicator.style.transform = "translate(-50%, -60px)";
+      indicator.classList.remove("ready");
+      indicator.classList.remove("spinning");
+    }
+
+    document.addEventListener("touchstart", function (e) {
+      if (refreshing || scrollTop() > 0) { pulling = false; return; }
+      startY = e.touches[0].clientY;
+      pulling = true;
+      currentPull = 0;
+    }, { passive: true });
+
+    document.addEventListener("touchmove", function (e) {
+      if (!pulling || refreshing) return;
+      var diff = e.touches[0].clientY - startY;
+      if (diff <= 0 || scrollTop() > 0) {
+        if (currentPull > 0) reset();
+        currentPull = 0;
+        pulling = false;
+        return;
+      }
+      e.preventDefault();
+      currentPull = Math.min(diff * 0.5, MAX_PULL);
+      applyPull(currentPull);
+    }, { passive: false });
+
+    document.addEventListener("touchend", function () {
+      if (!pulling) return;
+      pulling = false;
+      if (currentPull >= THRESHOLD && !refreshing) {
+        refreshing = true;
+        settle(THRESHOLD);
+        indicator.style.opacity = 1;
+        indicator.style.transform = "translate(-50%, " + (-60 + THRESHOLD) + "px)";
+        indicator.classList.add("spinning");
+        loadAndRender(true).then(function () {
+          refreshing = false;
+          reset();
+        });
+      } else {
+        reset();
+      }
+    });
+
+    document.addEventListener("touchcancel", function () {
+      if (!pulling) return;
+      pulling = false;
+      reset();
+    });
+  })();
+
+  loadAndRender(false);
+})();
+</script>
+</body>
+</html>
