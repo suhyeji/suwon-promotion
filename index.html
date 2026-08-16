@@ -396,7 +396,7 @@
         <table>
           <thead>
             <tr>
-              <th>#</th><th>팀</th><th>경기</th><th>승점</th><th>승무패</th><th>득점</th><th>실점</th><th>득실</th><th id="colProb">직행%</th>
+              <th>#</th><th>팀</th><th id="colProb">직행%</th><th>경기</th><th>승점</th><th>승무패</th><th>득점</th><th>실점</th><th>득실</th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
@@ -838,7 +838,7 @@
       if (rank <= 2) chip = '<span class="chip direct">직행</span>';
       else if (rank <= 6) chip = '<span class="chip po">PO권</span>';
 
-      var lastCell = mode === "sim"
+      var probCell = mode === "sim"
         ? fmtPct(t.pTop2) + "%"
         : (t.magicTop2 <= 0 ? "확정!" : (t.top2Achievable ? t.magicTop2 + "점" : "—"));
 
@@ -846,13 +846,13 @@
       tr.innerHTML =
         "<td>" + rank + "</td>" +
         "<td>" + t.short + chip + '<span class="row-caret">›</span></td>' +
+        '<td class="prob-cell">' + probCell + "</td>" +
         "<td>" + t.gp + "</td>" +
         "<td>" + t.pts + "</td>" +
         "<td>" + t.w + "-" + t.d + "-" + t.l + "</td>" +
         "<td>" + t.gf + "</td>" +
         "<td>" + t.ga + "</td>" +
-        "<td>" + (t.gf - t.ga >= 0 ? "+" : "") + (t.gf - t.ga) + "</td>" +
-        '<td class="prob-cell">' + lastCell + "</td>";
+        "<td>" + (t.gf - t.ga >= 0 ? "+" : "") + (t.gf - t.ga) + "</td>";
 
       tr.addEventListener("click", function () {
         var existing = tbody.querySelector(".fixture-expand-row");
