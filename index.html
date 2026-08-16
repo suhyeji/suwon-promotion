@@ -510,6 +510,10 @@
 
   var rank1 = new Array(N).fill(0);
   var rank2 = new Array(N).fill(0);
+  var rank3 = new Array(N).fill(0);
+  var rank4 = new Array(N).fill(0);
+  var rank5 = new Array(N).fill(0);
+  var rank6 = new Array(N).fill(0);
   var rankTop2 = new Array(N).fill(0);
   var rankPo = new Array(N).fill(0); // 3~6
   var rankRest = new Array(N).fill(0); // 7+
@@ -555,6 +559,10 @@
       var place = r + 1;
       if (place === 1) rank1[teamIdx]++;
       else if (place === 2) rank2[teamIdx]++;
+      else if (place === 3) rank3[teamIdx]++;
+      else if (place === 4) rank4[teamIdx]++;
+      else if (place === 5) rank5[teamIdx]++;
+      else if (place === 6) rank6[teamIdx]++;
       if (place <= 2) rankTop2[teamIdx]++;
       else if (place <= 6) rankPo[teamIdx]++;
       else rankRest[teamIdx]++;
@@ -564,6 +572,10 @@
   teams.forEach(function (t, i) {
     t.p1 = rank1[i] / TRIALS;
     t.p2 = rank2[i] / TRIALS;
+    t.p3 = rank3[i] / TRIALS;
+    t.p4 = rank4[i] / TRIALS;
+    t.p5 = rank5[i] / TRIALS;
+    t.p6 = rank6[i] / TRIALS;
     t.pTop2 = rankTop2[i] / TRIALS;
     t.pPo = rankPo[i] / TRIALS;
     t.pRest = rankRest[i] / TRIALS;
@@ -773,25 +785,28 @@
     if (mode === "sim") {
       document.getElementById("distTitle").textContent = "최종 순위 확률 분포";
       var segs = [
-        { label: "1위", v: me.p1, color: "var(--good)" },
-        { label: "2위", v: me.p2, color: "var(--good)" },
-        { label: "3~6위 (PO)", v: me.pPo, color: "var(--warn)" },
-        { label: "7위 이하", v: me.pRest, color: "var(--ink-3)" }
+        { label: "1위", v: me.p1, color: "var(--good)", opacity: 1 },
+        { label: "2위", v: me.p2, color: "var(--good)", opacity: 0.72 },
+        { label: "3위", v: me.p3, color: "var(--warn)", opacity: 1 },
+        { label: "4위", v: me.p4, color: "var(--warn)", opacity: 0.8 },
+        { label: "5위", v: me.p5, color: "var(--warn)", opacity: 0.6 },
+        { label: "6위", v: me.p6, color: "var(--warn)", opacity: 0.42 },
+        { label: "7위 이하", v: me.pRest, color: "var(--ink-3)", opacity: 1 }
       ];
-      segs.forEach(function (seg, i) {
+      segs.forEach(function (seg) {
         var span = document.createElement("span");
         span.style.width = (seg.v * 100) + "%";
         span.style.background = seg.color;
-        span.style.opacity = i === 1 ? "0.72" : "1";
+        span.style.opacity = seg.opacity;
         distBar.appendChild(span);
       });
-      segs.forEach(function (seg, i) {
+      segs.forEach(function (seg) {
         var item = document.createElement("div");
         item.className = "item";
         var dot = document.createElement("span");
         dot.className = "dot";
         dot.style.background = seg.color;
-        dot.style.opacity = i === 1 ? "0.72" : "1";
+        dot.style.opacity = seg.opacity;
         var text = document.createElement("span");
         text.textContent = seg.label + " " + fmtPct(seg.v) + "%";
         item.appendChild(dot);
