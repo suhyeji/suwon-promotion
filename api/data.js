@@ -56,7 +56,7 @@ function hasKickedOff(g, now) {
 function buildStandingsAndFixtures(games, now) {
   const stats = new Map();
   function team(name) {
-    if (!stats.has(name)) stats.set(name, { name: name, short: name, gp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 });
+    if (!stats.has(name)) stats.set(name, { name: name, short: name, gp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0, recentRaw: [] });
     return stats.get(name);
   }
 
@@ -86,6 +86,29 @@ function buildStandingsAndFixtures(games, now) {
     if (g.endYn === "N") {
       live.push({ round: g.roundId, home: hName, away: aName, homeGoal: hg, awayGoal: ag });
     }
+  });
+
+  // 최근 5경기 폼(승/무/패)은 K리그 공식 순위표처럼 공식 종료된 경기만 날짜순으로
+  // 반영한다 — 진행 중인 경기의 잠정 결과는 폼 배지에 넣지 않는다.
+  var finished = games
+    .filter(function (g) {
+      return g.endYn === "Y" && VALID_TEAMS.has(g.homeTeamName) && VALID_TEAMS.has(g.awayTeamName) &&
+        g.homeGoal != null && g.awayGoal != null;
+    })
+    .sort(function (a, b) {
+      return a.roundId - b.roundId || a.gameDate.localeCompare(b.gameDate);
+    });
+  finished.forEach(function (g) {
+    var H = team(g.homeTeamName), A = team(g.awayTeamName);
+    var hg = g.homeGoal, ag = g.awayGoal;
+    var hResult = hg > ag ? "W" : (hg < ag ? "L" : "D");
+    var aResult = hg > ag ? "L" : (hg < ag ? "W" : "D");
+    H.recentRaw.push(hResult);
+    A.recentRaw.push(aResult);
+  });
+  stats.forEach(function (t) {
+    t.recent = t.recentRaw.slice(-5);
+    delete t.recentRaw;
   });
 
   var fixtures = remaining

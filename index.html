@@ -25,6 +25,7 @@
     --good-bg: #e6f5ee;
     --warn: #b9791a;
     --warn-bg: #faf0dd;
+    --bad: #c9463c;
     --ring-track: #e3e8f2;
     --shadow: 0 1px 2px rgba(16, 26, 51, 0.04), 0 8px 24px rgba(16, 26, 51, 0.06);
   }
@@ -43,6 +44,7 @@
       --good-bg: #123626;
       --warn: #e3a83b;
       --warn-bg: #3a2c11;
+      --bad: #e3685e;
       --ring-track: #22304f;
       --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
     }
@@ -236,15 +238,16 @@
   .fixture-card .ha.home { background: var(--good-bg); color: var(--good); }
   .fixture-card .ha.away { background: var(--warn-bg); color: var(--warn); }
 
-  .rival-fixture-card { width: 92px; padding: 8px 6px; }
-  .rival-fixture-card .rank-badge {
-    display: inline-block; font-size: 9px; font-weight: 700; color: var(--navy);
-    background: var(--surface-2); border: 1px solid var(--line);
-    border-radius: 100px; padding: 1px 5px; margin-bottom: 3px;
-  }
+  .rival-fixture-card { width: 108px; padding: 12px 6px; align-self: flex-start; }
   .rival-fixture-card .no { font-size: 9px; }
-  .rival-fixture-card .opp { font-size: 10.5px; line-height: 1.25; min-height: 26px; margin: 4px 0 5px; }
-  .rival-fixture-card .opp .vs { display: block; font-weight: 600; color: var(--ink-2); font-size: 9.5px; margin-top: 2px; }
+  .rival-fixture-card .opp {
+    display: block; font-size: 12.5px; line-height: 1.3; min-height: 0;
+    margin: 8px 0 2px; font-weight: 400; color: var(--ink-2);
+  }
+  .rival-fixture-card .opp .riv-team { font-weight: 700; color: var(--ink); }
+  .rival-fixture-card.rival-clash { background: var(--warn-bg); border: 1.5px solid var(--warn); }
+  .rival-fixture-card.rival-clash .no { color: var(--warn); font-weight: 700; }
+  .rival-fixture-card.rival-clash .opp .riv-team { color: var(--warn); }
   .no-fixtures-inline { font-size: 12.5px; color: var(--ink-3); padding: 4px 16px; margin: 0; }
 
   /* table */
@@ -253,7 +256,7 @@
   .table-head-row h2 { font-size: 13px; font-weight: 700; margin: 0; color: var(--ink-2); }
   .table-head-row span { font-size: 11px; color: var(--ink-3); }
   .table-scroll { overflow-x: auto; overflow-y: visible; }
-  table { border-collapse: collapse; width: 100%; min-width: 540px; font-size: 12.5px; }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 12.5px; }
   thead th {
     position: sticky; top: 0;
     text-align: right; font-weight: 600; color: var(--ink-3); font-size: 10.5px;
@@ -262,9 +265,13 @@
     background: var(--surface);
   }
   thead th:first-child, thead th:nth-child(2) { text-align: left; }
+  thead th:nth-child(2) { padding-right: 4px; }
+  thead th:last-child { text-align: center; }
+  thead th:nth-child(3) { padding-left: 4px; }
   tbody td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
   tbody td:first-child { text-align: center; width: 28px; color: var(--ink-3); font-weight: 700; }
-  tbody td:nth-child(2) { text-align: left; font-weight: 600; }
+  tbody td:nth-child(2) { text-align: left; font-weight: 600; padding-right: 4px; }
+  tbody td:nth-child(3) { padding-left: 4px; }
   tbody tr:last-child td { border-bottom: none; }
   tbody tr.zone-direct td:first-child { box-shadow: inset 3px 0 0 var(--good); }
   tbody tr.zone-po td:first-child { box-shadow: inset 3px 0 0 var(--warn); }
@@ -274,6 +281,18 @@
   .chip.direct { background: var(--good-bg); color: var(--good); }
   .chip.po { background: var(--warn-bg); color: var(--warn); }
   .prob-cell { font-weight: 700; }
+
+  .form-cell { white-space: nowrap; text-align: center; }
+  .form-dots { display: inline-flex; gap: 3px; justify-content: center; vertical-align: middle; }
+  .form-dot {
+    width: 17px; height: 17px; border-radius: 50%; flex: none;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700; color: #fff;
+  }
+  .form-dot.w { background: var(--good); }
+  .form-dot.d { background: var(--ink-3); }
+  .form-dot.l { background: var(--bad); }
+  .form-empty { color: var(--ink-3); }
 
   tbody tr.team-row { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
   tbody tr.team-row:active { background: var(--surface-2); }
@@ -415,7 +434,7 @@
         <table>
           <thead>
             <tr>
-              <th>#</th><th>팀</th><th id="colProb">직행%</th><th>경기</th><th>승점</th><th>승무패</th><th>득점</th><th>실점</th><th>득실</th>
+              <th>#</th><th>팀</th><th id="colProb">직행%</th><th>경기</th><th>승점</th><th>승무패</th><th>득점</th><th>실점</th><th>득실</th><th>최근5경기</th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
@@ -721,20 +740,27 @@
   });
 
   // 승격 경쟁: 현재 1~6위 팀(수원삼성 제외)의 이번 라운드·다음 라운드 잔여 대진을
-  // 팀별로 묶지 않고 날짜·시간순으로 한 줄에 이어서 보여준다.
-  function makeRivalFixtureCard(f, teamIdx, rank) {
-    var round = f[0], mmdd = f[1], home = f[2] === teamIdx, time = f[4];
-    var teamName = teams[teamIdx].short;
-    var oppName = teams[home ? f[3] : f[2]].short;
+  // 팀별로 묶지 않고 날짜·시간순으로 한 줄에 이어서 보여준다. 홈팀을 항상 왼쪽에,
+  // 원정팀을 오른쪽에 표시하고, 경쟁팀끼리 맞붙는 경기는 카드 하나로만 보여준다.
+  function makeRivalFixtureCard(f, rankByTeamIdx) {
+    var round = f[0], mmdd = f[1], homeIdx = f[2], awayIdx = f[3], time = f[4];
+    var homeName = teams[homeIdx].short;
+    var awayName = teams[awayIdx].short;
+    var homeIsRival = rankByTeamIdx[homeIdx] != null;
+    var awayIsRival = rankByTeamIdx[awayIdx] != null;
+    var isClash = homeIsRival && awayIsRival;
     var dt = new Date("2026-" + mmdd);
     var dateLabel = mmdd.replace("-", "/").replace(/^0/, "") + "(" + WEEKDAY[dt.getDay()] + ")";
     var card = document.createElement("div");
-    card.className = "fixture-card rival-fixture-card";
+    card.className = "fixture-card rival-fixture-card" + (isClash ? " rival-clash" : "");
     card.innerHTML =
-      '<span class="rank-badge">' + rank + "위</span>" +
       '<div class="no">' + round + "R · " + dateLabel + "</div>" +
       (time ? '<div class="time">' + time + "</div>" : "") +
-      '<div class="opp">' + teamName + '<span class="vs">vs ' + oppName + "</span></div>";
+      '<div class="opp">' +
+        '<span class="' + (homeIsRival ? "riv-team" : "") + '">' + homeName + "</span>" +
+        ' vs ' +
+        '<span class="' + (awayIsRival ? "riv-team" : "") + '">' + awayName + "</span>" +
+      "</div>";
     return card;
   }
 
@@ -746,23 +772,34 @@
     var rivalRounds = [nextRound, nextRound + 1];
     rivalRoundNote.textContent = nextRound + "R · " + (nextRound + 1) + "R";
 
-    var rivalEntries = [];
+    var rankByTeamIdx = {};
     currentOrder.slice(0, 6).forEach(function (t, i) {
       if (t.name === TARGET) return;
-      var idx = nameIdx[t.name];
-      teamFixtures(idx)
-        .filter(function (f) { return rivalRounds.indexOf(f[0]) !== -1; })
-        .forEach(function (f) { rivalEntries.push({ f: f, teamIdx: idx, rank: i + 1 }); });
-    });
-    rivalEntries.sort(function (a, b) {
-      if (a.f[0] !== b.f[0]) return a.f[0] - b.f[0];
-      if (a.f[1] !== b.f[1]) return a.f[1] < b.f[1] ? -1 : 1;
-      return (a.f[4] || "").localeCompare(b.f[4] || "");
+      rankByTeamIdx[nameIdx[t.name]] = i + 1;
     });
 
-    if (rivalEntries.length) {
-      rivalEntries.forEach(function (entry) {
-        rivalFixtureList.appendChild(makeRivalFixtureCard(entry.f, entry.teamIdx, entry.rank));
+    var seen = {};
+    var rivalGames = [];
+    Object.keys(rankByTeamIdx).forEach(function (idxStr) {
+      var idx = Number(idxStr);
+      teamFixtures(idx)
+        .filter(function (f) { return rivalRounds.indexOf(f[0]) !== -1; })
+        .forEach(function (f) {
+          var key = f[0] + "|" + f[2] + "|" + f[3];
+          if (seen[key]) return;
+          seen[key] = true;
+          rivalGames.push(f);
+        });
+    });
+    rivalGames.sort(function (a, b) {
+      if (a[0] !== b[0]) return a[0] - b[0];
+      if (a[1] !== b[1]) return a[1] < b[1] ? -1 : 1;
+      return (a[4] || "").localeCompare(b[4] || "");
+    });
+
+    if (rivalGames.length) {
+      rivalGames.forEach(function (f) {
+        rivalFixtureList.appendChild(makeRivalFixtureCard(f, rankByTeamIdx));
       });
     } else {
       var empty = document.createElement("p");
@@ -896,6 +933,15 @@
   }
 
   var tbody = document.getElementById("tableBody");
+  function renderFormDots(recent) {
+    if (!recent || !recent.length) return '<span class="form-empty">-</span>';
+    return '<span class="form-dots">' + recent.map(function (r) {
+      var cls = r === "W" ? "w" : (r === "D" ? "d" : "l");
+      var label = r === "W" ? "승" : (r === "D" ? "무" : "패");
+      return '<span class="form-dot ' + cls + '">' + label + "</span>";
+    }).join("") + "</span>";
+  }
+
   function renderTable(mode) {
     document.getElementById("colProb").textContent = mode === "sim" ? "직행%" : "매직넘버";
     document.getElementById("tableSubNote").textContent = mode === "sim" ? "현재 순위 · 직행 확률" : "현재 순위 · 직행 확정까지 필요 승점";
@@ -925,7 +971,8 @@
         "<td>" + t.w + "-" + t.d + "-" + t.l + "</td>" +
         "<td>" + t.gf + "</td>" +
         "<td>" + t.ga + "</td>" +
-        "<td>" + (t.gf - t.ga >= 0 ? "+" : "") + (t.gf - t.ga) + "</td>";
+        "<td>" + (t.gf - t.ga >= 0 ? "+" : "") + (t.gf - t.ga) + "</td>" +
+        '<td class="form-cell">' + renderFormDots(t.recent) + "</td>";
 
       tr.addEventListener("click", function () {
         var existing = tbody.querySelector(".fixture-expand-row");
@@ -941,7 +988,7 @@
         expandTr.className = "fixture-expand-row";
         expandTr.dataset.team = t.name;
         var td = document.createElement("td");
-        td.colSpan = 9;
+        td.colSpan = 10;
         var scrollDiv = document.createElement("div");
         scrollDiv.className = "fixture-scroll";
         var idx = nameIdx[t.name];
