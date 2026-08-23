@@ -236,6 +236,17 @@
   .fixture-card .ha.home { background: var(--good-bg); color: var(--good); }
   .fixture-card .ha.away { background: var(--warn-bg); color: var(--warn); }
 
+  .rival-fixture-card { width: 92px; padding: 8px 6px; }
+  .rival-fixture-card .rank-badge {
+    display: inline-block; font-size: 9px; font-weight: 700; color: var(--navy);
+    background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: 100px; padding: 1px 5px; margin-bottom: 3px;
+  }
+  .rival-fixture-card .no { font-size: 9px; }
+  .rival-fixture-card .opp { font-size: 10.5px; line-height: 1.25; min-height: 26px; margin: 4px 0 5px; }
+  .rival-fixture-card .opp .vs { display: block; font-weight: 600; color: var(--ink-2); font-size: 9.5px; margin-top: 2px; }
+  .no-fixtures-inline { font-size: 12.5px; color: var(--ink-3); padding: 4px 16px; margin: 0; }
+
   /* table */
   .table-card { padding: 4px 0 6px; }
   .table-head-row { display: flex; align-items: baseline; justify-content: space-between; padding: 12px 16px 8px; }
@@ -387,6 +398,14 @@
       <div class="fixture-scroll" id="fixtureList"></div>
     </section>
 
+    <section class="card fixtures">
+      <div class="table-head-row">
+        <h2>승격 경쟁팀 다음 대진 (1~6위)</h2>
+        <span id="rivalRoundNote">-</span>
+      </div>
+      <div class="fixture-scroll" id="rivalFixtureList"></div>
+    </section>
+
     <section class="card table-card">
       <div class="table-head-row">
         <h2>K리그2 전체 순위</h2>
@@ -422,7 +441,7 @@
 
 <script>
 (function () {
-  var TARGET = "수원삼성";
+  var TARGET = "수원";
   var currentMode = "sim";
   var refreshBtn = document.getElementById("refreshBtn");
   var modeSimBtn = document.getElementById("modeSimBtn");
@@ -700,6 +719,60 @@
   suwonFixtures.forEach(function (f) {
     fixtureList.appendChild(makeFixtureCard(f, suwonIdx));
   });
+
+  // 승격 경쟁: 현재 1~6위 팀(수원삼성 제외)의 이번 라운드·다음 라운드 잔여 대진을
+  // 팀별로 묶지 않고 날짜·시간순으로 한 줄에 이어서 보여준다.
+  function makeRivalFixtureCard(f, teamIdx, rank) {
+    var round = f[0], mmdd = f[1], home = f[2] === teamIdx, time = f[4];
+    var teamName = teams[teamIdx].short;
+    var oppName = teams[home ? f[3] : f[2]].short;
+    var dt = new Date("2026-" + mmdd);
+    var dateLabel = mmdd.replace("-", "/").replace(/^0/, "") + "(" + WEEKDAY[dt.getDay()] + ")";
+    var card = document.createElement("div");
+    card.className = "fixture-card rival-fixture-card";
+    card.innerHTML =
+      '<span class="rank-badge">' + rank + "위</span>" +
+      '<div class="no">' + round + "R · " + dateLabel + "</div>" +
+      (time ? '<div class="time">' + time + "</div>" : "") +
+      '<div class="opp">' + teamName + '<span class="vs">vs ' + oppName + "</span></div>";
+    return card;
+  }
+
+  var rivalRoundNote = document.getElementById("rivalRoundNote");
+  var rivalFixtureList = document.getElementById("rivalFixtureList");
+  rivalFixtureList.innerHTML = "";
+  if (fixtures.length) {
+    var nextRound = fixtures.reduce(function (min, f) { return Math.min(min, f[0]); }, fixtures[0][0]);
+    var rivalRounds = [nextRound, nextRound + 1];
+    rivalRoundNote.textContent = nextRound + "R · " + (nextRound + 1) + "R";
+
+    var rivalEntries = [];
+    currentOrder.slice(0, 6).forEach(function (t, i) {
+      if (t.name === TARGET) return;
+      var idx = nameIdx[t.name];
+      teamFixtures(idx)
+        .filter(function (f) { return rivalRounds.indexOf(f[0]) !== -1; })
+        .forEach(function (f) { rivalEntries.push({ f: f, teamIdx: idx, rank: i + 1 }); });
+    });
+    rivalEntries.sort(function (a, b) {
+      if (a.f[0] !== b.f[0]) return a.f[0] - b.f[0];
+      if (a.f[1] !== b.f[1]) return a.f[1] < b.f[1] ? -1 : 1;
+      return (a.f[4] || "").localeCompare(b.f[4] || "");
+    });
+
+    if (rivalEntries.length) {
+      rivalEntries.forEach(function (entry) {
+        rivalFixtureList.appendChild(makeRivalFixtureCard(entry.f, entry.teamIdx, entry.rank));
+      });
+    } else {
+      var empty = document.createElement("p");
+      empty.className = "no-fixtures-inline";
+      empty.textContent = "해당 라운드 잔여 경기가 없습니다.";
+      rivalFixtureList.appendChild(empty);
+    }
+  } else {
+    rivalRoundNote.textContent = "-";
+  }
 
   var circumference = 2 * Math.PI * 74;
   var ring = document.getElementById("ringValue");

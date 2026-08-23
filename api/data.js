@@ -3,25 +3,13 @@
 // list. All the simulation/magic-number math still runs client-side in
 // index.html — this endpoint's only job is "what actually happened / is left".
 
-const NAME_MAP = {
-  "경남": "경남FC",
-  "김포": "김포FC",
-  "김해": "김해FC2008",
-  "대구": "대구FC",
-  "부산": "부산아이파크",
-  "서울E": "서울이랜드",
-  "성남": "성남FC",
-  "수원": "수원삼성",
-  "수원FC": "수원FC",
-  "안산": "안산그리너스",
-  "용인": "용인FC",
-  "전남": "전남드래곤즈",
-  "천안": "천안시티",
-  "충남아산": "충남아산",
-  "충북청주": "충북청주",
-  "파주": "파주프런티어",
-  "화성": "화성FC"
-};
+// 팀 이름은 K리그 공식 API(kleague.com)가 스케줄에 표기하는 이름을 그대로 쓴다 —
+// 임의로 풀네임으로 바꿔 부르지 않는다. 이 집합은 유효한 팀만 걸러내는
+// 화이트리스트 역할만 한다.
+const VALID_TEAMS = new Set([
+  "경남", "김포", "김해", "대구", "부산", "서울E", "성남", "수원", "수원FC",
+  "안산", "용인", "전남", "천안", "충남아산", "충북청주", "파주", "화성"
+]);
 
 // 2026시즌 K리그2는 2월 개막, 11월 종료 — 시즌 전체를 매번 훑어서 지금까지 치른
 // 경기와 남은 경기를 다시 계산한다.
@@ -85,8 +73,8 @@ function buildStandingsAndFixtures(games, now) {
   });
 
   counted.forEach(function (g) {
-    var hName = NAME_MAP[g.homeTeamName], aName = NAME_MAP[g.awayTeamName];
-    if (!hName || !aName || g.homeGoal == null || g.awayGoal == null) return;
+    var hName = g.homeTeamName, aName = g.awayTeamName;
+    if (!VALID_TEAMS.has(hName) || !VALID_TEAMS.has(aName) || g.homeGoal == null || g.awayGoal == null) return;
     if (g.endYn === "Y") maxRound = Math.max(maxRound, g.roundId);
     var H = team(hName), A = team(aName);
     var hg = g.homeGoal, ag = g.awayGoal;
@@ -101,13 +89,13 @@ function buildStandingsAndFixtures(games, now) {
   });
 
   var fixtures = remaining
-    .filter(function (g) { return NAME_MAP[g.homeTeamName] && NAME_MAP[g.awayTeamName]; })
+    .filter(function (g) { return VALID_TEAMS.has(g.homeTeamName) && VALID_TEAMS.has(g.awayTeamName); })
     .sort(function (a, b) {
       return a.roundId - b.roundId || a.gameDate.localeCompare(b.gameDate);
     })
     .map(function (g) {
       var mmdd = g.gameDate.slice(5).replace(".", "-");
-      return [g.roundId, mmdd, NAME_MAP[g.homeTeamName], NAME_MAP[g.awayTeamName], g.gameTime || ""];
+      return [g.roundId, mmdd, g.homeTeamName, g.awayTeamName, g.gameTime || ""];
     });
 
   return { teams: Array.from(stats.values()), fixtures: fixtures, asOfRound: maxRound, live: live };
@@ -136,9 +124,7 @@ module.exports = async function handler(req, res) {
           awayTeamName: finishedSample.awayTeamName,
           endYn: finishedSample.endYn,
           homeGoal: finishedSample.homeGoal,
-          awayGoal: finishedSample.awayGoal,
-          mappedHome: NAME_MAP[finishedSample.homeTeamName],
-          mappedAway: NAME_MAP[finishedSample.awayTeamName]
+          awayGoal: finishedSample.awayGoal
         } : null
       });
     }
