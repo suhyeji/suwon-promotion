@@ -74,12 +74,12 @@
     position: relative;
     background: linear-gradient(160deg, var(--navy), #071d46 120%);
     color: var(--navy-ink);
-    padding: max(20px, env(safe-area-inset-top)) 20px 22px;
+    padding: calc(env(safe-area-inset-top) + 30px) 20px 22px;
     border-radius: 0 0 20px 20px;
   }
   .refresh-btn {
     position: absolute;
-    top: max(20px, env(safe-area-inset-top));
+    top: calc(env(safe-area-inset-top) + 30px);
     right: 20px;
     width: 34px; height: 34px;
     border: none; border-radius: 50%;
