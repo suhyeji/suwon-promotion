@@ -133,7 +133,8 @@ module.exports = async function handler(req, res) {
     monthLists.flat().forEach(function (g) { byId.set(g.gameId, g); });
     var games = Array.from(byId.values());
 
-    var result = buildStandingsAndFixtures(games, Date.now());
+    var now = Date.now();
+    var result = buildStandingsAndFixtures(games, now);
 
     if (debug) {
       var finishedSample = games.filter(function (g) { return g.endYn === "Y"; })[0];
@@ -156,7 +157,18 @@ module.exports = async function handler(req, res) {
     // 엣지 캐싱을 지시해야 한다 (일반 Cache-Control은 CDN 레이어에 적용되지 않음).
     // 진행 중인 경기가 있으면 30분 캐시로는 잠정 스코어가 너무 오래 묵으니
     // 짧게(60초) 캐시하고, 없으면 K리그 사이트 보호를 위해 30분으로 되돌린다.
-    var hasLive = result.live.length > 0;
+    // 다만 "없음"으로 30분 캐시가 걸린 직후에 경기가 킥오프되면, 그 30분 동안
+    // 엣지가 "경기 없음" 응답을 계속 내려줘서 새로고침해도 진행중 표시가 하나도
+    // 안 뜨는 문제가 생긴다 — 킥오프 예정/직후 30분 구간도 활성 상태로 보고
+    // 짧게 캐시해서 이 사각지대를 없앤다.
+    var NEAR_KICKOFF_WINDOW = 30 * 60 * 1000;
+    var hasNearKickoff = games.some(function (g) {
+      if (!g.gameDate || !g.gameTime) return false;
+      var iso = g.gameDate.replace(/\./g, "-") + "T" + g.gameTime + ":00+09:00";
+      var t = new Date(iso).getTime();
+      return !isNaN(t) && Math.abs(now - t) <= NEAR_KICKOFF_WINDOW;
+    });
+    var hasLive = result.live.length > 0 || hasNearKickoff;
     var sMaxAge = hasLive ? 60 : 1800;
     var swr = hasLive ? 120 : 3600;
     res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
