@@ -44,7 +44,13 @@ async function fetchMonth(month, debugLog) {
   return json.data.scheduleList;
 }
 
-// endYn이 아직 "N"이어도 킥오프 시각이 이미 지났으면 경기 중(또는 종료 반영 지연)으로 보고,
+// 경기 종료 직후에는 endYn이 한동안 "N"으로 남아 있어도 gameStatus가 먼저 "FE"로
+// 바뀐다. 두 필드를 함께 봐야 끝난 경기를 진행 중으로 잘못 표시하지 않는다.
+function isFinished(g) {
+  return g.endYn === "Y" || g.gameStatus === "FE";
+}
+
+// 종료되지 않은 경기의 킥오프 시각이 이미 지났으면 경기 중으로 보고,
 // K리그 공식 홈페이지처럼 현재(잠정) 스코어를 순위표에 그대로 반영한다.
 function hasKickedOff(g, now) {
   if (!g.gameDate || !g.gameTime) return false;
@@ -63,19 +69,19 @@ function buildStandingsAndFixtures(games, now) {
   var maxRound = 0;
   var live = [];
 
-  // 순위표에 반영할 경기: 공식 종료(Y) + 킥오프가 지났지만 아직 진행/미확정(N)인 경기(잠정 스코어)
+  // 순위표에 반영할 경기: 종료된 경기 + 킥오프가 지났지만 아직 진행 중인 경기(잠정 스코어)
   var counted = games.filter(function (g) {
-    return g.endYn === "Y" || (g.endYn === "N" && hasKickedOff(g, now));
+    return isFinished(g) || (!isFinished(g) && hasKickedOff(g, now));
   });
   // 잔여 대진표: 아직 시작하지 않은 경기만
   var remaining = games.filter(function (g) {
-    return g.endYn === "N" && !hasKickedOff(g, now);
+    return !isFinished(g) && !hasKickedOff(g, now);
   });
 
   counted.forEach(function (g) {
     var hName = g.homeTeamName, aName = g.awayTeamName;
     if (!VALID_TEAMS.has(hName) || !VALID_TEAMS.has(aName) || g.homeGoal == null || g.awayGoal == null) return;
-    if (g.endYn === "Y") maxRound = Math.max(maxRound, g.roundId);
+    if (isFinished(g)) maxRound = Math.max(maxRound, g.roundId);
     var H = team(hName), A = team(aName);
     var hg = g.homeGoal, ag = g.awayGoal;
     H.gp++; A.gp++;
@@ -83,7 +89,7 @@ function buildStandingsAndFixtures(games, now) {
     if (hg > ag) { H.w++; H.pts += 3; A.l++; }
     else if (hg < ag) { A.w++; A.pts += 3; H.l++; }
     else { H.d++; A.d++; H.pts += 1; A.pts += 1; }
-    if (g.endYn === "N") {
+    if (!isFinished(g)) {
       live.push({ round: g.roundId, home: hName, away: aName, homeGoal: hg, awayGoal: ag });
     }
   });
@@ -92,7 +98,7 @@ function buildStandingsAndFixtures(games, now) {
   // 반영한다 — 진행 중인 경기의 잠정 결과는 폼 배지에 넣지 않는다.
   var finished = games
     .filter(function (g) {
-      return g.endYn === "Y" && VALID_TEAMS.has(g.homeTeamName) && VALID_TEAMS.has(g.awayTeamName) &&
+      return isFinished(g) && VALID_TEAMS.has(g.homeTeamName) && VALID_TEAMS.has(g.awayTeamName) &&
         g.homeGoal != null && g.awayGoal != null;
     })
     .sort(function (a, b) {
@@ -137,11 +143,11 @@ module.exports = async function handler(req, res) {
     var result = buildStandingsAndFixtures(games, now);
 
     if (debug) {
-      var finishedSample = games.filter(function (g) { return g.endYn === "Y"; })[0];
+      var finishedSample = games.filter(isFinished)[0];
       debugLog.push({
         gamesTotal: games.length,
-        finishedCount: games.filter(function (g) { return g.endYn === "Y"; }).length,
-        remainingCount: games.filter(function (g) { return g.endYn === "N"; }).length,
+        finishedCount: games.filter(isFinished).length,
+        remainingCount: games.filter(function (g) { return !isFinished(g); }).length,
         liveCount: result.live.length,
         sample: finishedSample ? {
           homeTeamName: finishedSample.homeTeamName,
