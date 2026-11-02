@@ -446,6 +446,7 @@
     <details class="method card">
       <summary>확률은 어떻게 계산하나요?</summary>
       <p><strong>① 시뮬레이션</strong> — K리그 공식 홈페이지(kleague.com)의 경기 일정 데이터로 17개 팀 전체의 잔여 경기 대진(상대·홈/원정·날짜)을 실제 그대로 가져와, 각 팀의 득점·실점 기반 공격력·수비력으로 개별 경기 스코어를 포아송 분포로 12,000회 시뮬레이션합니다. 대진표는 확정이고 경기 결과만 확률적으로 반복 계산하는 방식이라 가장 정교합니다.</p>
+      <p>시뮬레이션에서 모든 경우가 직행으로 나와도 <strong>수학적인 확정은 아닙니다.</strong> 아직 확정되지 않은 팀의 확률은 반올림 결과가 100%여도 <strong>99.9% 초과</strong>로 표시하고, 실제 직행 횟수와 매직넘버를 함께 보여줍니다.</p>
       <p><strong>② 매직넘버</strong> — 확률이 아니라 <strong>수학적으로 확정되는 지점</strong>을 계산합니다. "다른 모든 팀이 잔여 경기를 전부 이긴다"는 최악의 가정을 깔아도, 그 상황에서 직행권(2위 이내)을 지키려면 지금부터 몇 승점이 더 필요한지를 구합니다. K리그는 승점이 같으면 다득점으로 순위를 가리므로, <strong>동률은 확정으로 보지 않고 경계 팀보다 승점 1점을 더 얻어야</strong> 확정으로 표시합니다. 이때 <strong>자신과의 남은 맞대결은 반영</strong>합니다 — 예를 들어 수원과 수원FC가 남은 경기에서 서로 맞붙는다면 "둘 다 그 경기를 이긴다"고 가정하지 않고, 수원이 이긴다고 보고 그만큼 상대의 최대치를 깎습니다.</p>
       <p>다만 <strong>라이벌팀들끼리의 맞대결</strong>(예: 수원FC와 서울이랜드의 남은 경기)까지 전부 정확히 반영하는 건 계산 복잡도가 기하급수로 커지는 문제라(3점 승점제에서는 이 문제 자체가 NP-hard로 알려져 있어요) 여전히 각자 독립적으로 전승한다고 가정합니다. 그래서 이 숫자는 <strong>"이보다 적은 승점으로도 안전할 수 있는" 안전한 상한선</strong>이에요 — 실전 감각에 가까운 확률이 궁금하면 시뮬레이션 탭을 보세요.</p>
       <p>두 방식 모두 실제 경기력·부상·감독 교체 등은 반영하지 못하므로 <strong>추세를 보여주는 추정치</strong>이며 K리그 공식 수치가 아닙니다. 2026시즌은 K리그1 확대에 따른 한시적 규정으로 <strong>1·2위가 다이렉트 승격</strong>, 3~6위가 승격 플레이오프를 치릅니다.</p>
@@ -683,6 +684,9 @@
     var v = pct(x);
     return (v % 1 === 0 ? v.toFixed(0) : v.toFixed(1));
   }
+  function fmtSimPct(x, confirmed) {
+    return !confirmed && pct(x) === 100 ? ">99.9" : fmtPct(x);
+  }
 
   var asOfLabel = asOfRound + "라운드까지 반영";
   var fetchedLabel = new Date(fetchedAt).toLocaleString("ko-KR", {
@@ -824,10 +828,14 @@
       requestAnimationFrame(function () {
         setTimeout(function () { ring.style.strokeDashoffset = offset.toFixed(1); }, 60);
       });
-      document.getElementById("ringPct").innerHTML = fmtPct(me.pTop2) + "<sup>%</sup>";
+      var top2Pct = fmtSimPct(me.pTop2, me.magicTop2 <= 0 || fixtures.length === 0);
+      document.getElementById("ringPct").innerHTML = top2Pct.replace(">", "&gt;") + "<sup>%</sup>";
       document.getElementById("ringLabel").textContent = "직행 승격 확률";
       document.getElementById("heroTitle").textContent = "시즌 종료 시 1~2위(다이렉트 승격) 확률";
       document.getElementById("simNote").textContent = "K리그 공식 잔여 대진 " + fixtures.length + "경기 전부 반영 · 시뮬레이션 " + TRIALS.toLocaleString("ko-KR") + "회";
+      if (me.magicTop2 > 0 && pct(me.pTop2) === 100) {
+        document.getElementById("simNote").textContent += " · " + rankTop2[suwonIdx].toLocaleString("ko-KR") + "회 직행, 아직 확정 아님 (매직넘버 " + me.magicTop2 + "점)";
+      }
     } else {
       var frac = me.maxAdd > 0 ? Math.max(0, Math.min(1, 1 - me.magicTop2 / me.maxAdd)) : 1;
       var offset2 = circumference * (1 - frac);
@@ -847,11 +855,11 @@
 
   function renderStats(mode) {
     if (mode === "sim") {
-      document.getElementById("p1").textContent = fmtPct(me.p1) + "%";
+      document.getElementById("p1").textContent = fmtSimPct(me.p1, fixtures.length === 0) + "%";
       document.getElementById("p1Label").textContent = "1위 확률";
-      document.getElementById("p2").textContent = fmtPct(me.p2) + "%";
+      document.getElementById("p2").textContent = fmtSimPct(me.p2, fixtures.length === 0) + "%";
       document.getElementById("p2Label").textContent = "2위 확률";
-      document.getElementById("pPo").textContent = fmtPct(me.pPo) + "%";
+      document.getElementById("pPo").textContent = fmtSimPct(me.pPo, fixtures.length === 0) + "%";
       document.getElementById("pPoLabel").textContent = "승격PO행 (3~6위)";
     } else {
       document.getElementById("p1").textContent = (me.magicTop2 <= 0 ? "0" : me.magicTop2) + "점";
@@ -920,7 +928,7 @@
         dot.style.background = seg.color;
         dot.style.opacity = seg.opacity;
         var text = document.createElement("span");
-        text.textContent = seg.label + " " + fmtPct(seg.v) + "%";
+        text.textContent = seg.label + " " + fmtSimPct(seg.v, fixtures.length === 0) + "%";
         item.appendChild(dot);
         item.appendChild(text);
         distLegend.appendChild(item);
@@ -960,7 +968,7 @@
       else if (rank <= 6) chip = '<span class="chip po">PO권</span>';
 
       var probCell = mode === "sim"
-        ? fmtPct(t.pTop2) + "%"
+        ? fmtSimPct(t.pTop2, t.magicTop2 <= 0 || fixtures.length === 0) + "%"
         : (t.magicTop2 <= 0 ? "확정!" : (t.top2Achievable ? t.magicTop2 + "점" : "—"));
 
       tr.className = (tr.className + " team-row").trim();
